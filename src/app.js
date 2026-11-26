@@ -1,7 +1,9 @@
 import * as pdfjsLib from '../vendor/pdfjs/pdf.min.mjs';
 import { extractPages } from './pdftext.js';
+import { normalizePageText } from './checker.js';
+import { revisarConLT, unirHallazgos } from './languagetool.js';
 import { jsPDF, autoTable } from '../vendor/jspdf/jspdf.mjs';
-import { crearInforme, nombreInforme, aBase64 } from './report.js';
+import { crearInforme, nombreInforme, aBase64, etiquetaTipo } from './report.js';
 import { crearVisor, guardarArchivo } from './viewer.js';
 import {
   cargarAjustes, guardarAjustes, filtrar, ignorar, restaurar, agregarPalabra,
@@ -100,7 +102,7 @@ function celdaAcciones(h) {
 
 function fila(h) {
   const tr = document.createElement('tr');
-  const celdas = [String(h.pagina), h.palabra, h.tipo, h.motivo, null, h.sugerencias.length ? h.sugerencias.join(', ') : '—'];
+  const celdas = [String(h.pagina), h.palabra, etiquetaTipo(h), h.motivo, null, h.sugerencias.length ? h.sugerencias.join(', ') : '—'];
   celdas.forEach((c, i) => {
     const td = document.createElement('td');
     if (i === 4) {
@@ -119,7 +121,7 @@ function fila(h) {
 
 function filaIgnorada(h) {
   const tr = document.createElement('tr');
-  for (const c of [String(h.pagina), h.palabra, h.tipo, h.motivo, h.alcance === 'siempre' ? 'Siempre' : 'Este documento']) {
+  for (const c of [String(h.pagina), h.palabra, etiquetaTipo(h), h.motivo, h.alcance === 'siempre' ? 'Siempre' : 'Este documento']) {
     const td = document.createElement('td');
     td.textContent = c;
     tr.append(td);
@@ -216,16 +218,35 @@ entrada.addEventListener('change', async () => {
   try {
     const data = new Uint8Array(await file.arrayBuffer());
     const docId = await idDocumento(data, file);
+    // LanguageTool (opcional): si falla una vez, se sigue solo con el motor local.
+    const servidor = ajustes.servidorLT;
+    let ltActivo = Boolean(servidor);
+    let ltVersion = '';
+    let ltPaginas = 0;
+    let ltError = '';
     const paginas = await extractPages(pdfjsLib, data, async (n, texto, tot) => {
-      setEstado(`Revisando página ${n} de ${tot}…`);
-      const r = await llamar({ tipo: 'pagina', pagina: n, texto });
-      todos.push(...r.hallazgos);
+      setEstado(`Revisando página ${n} de ${tot}${ltActivo ? ' (con LanguageTool)' : ''}…`);
+      const normal = normalizePageText(texto);
+      const [local, lt] = await Promise.all([
+        llamar({ tipo: 'pagina', pagina: n, texto: normal }),
+        ltActivo
+          ? revisarConLT(servidor, normal, n).catch((err) => { ltActivo = false; ltError = err.message || String(err); return null; })
+          : null,
+      ]);
+      if (lt) { ltPaginas++; ltVersion = lt.version || ltVersion; }
+      todos.push(...(lt ? unirHallazgos(local.hallazgos, lt.hallazgos) : local.hallazgos));
     });
     const seg = ((performance.now() - t0) / 1000).toFixed(1);
-    ultimo = { archivo: file.name, docId, fecha: new Date(), paginas, motores: ['local'], hallazgos: todos };
+    const motores = ['local'];
+    if (servidor) {
+      if (ltPaginas === paginas) motores.push(`LanguageTool${ltVersion ? ' ' + ltVersion : ''}`);
+      else if (ltPaginas > 0) motores.push(`LanguageTool (solo ${ltPaginas} de ${paginas} páginas)`);
+      else motores.push('LanguageTool no disponible');
+    }
+    ultimo = { archivo: file.name, docId, fecha: new Date(), paginas, motores, hallazgos: todos };
     render();
     acciones.hidden = false;
-    setEstado(`Listo: ${paginas} páginas en ${seg} s.`);
+    setEstado(`Listo: ${paginas} páginas en ${seg} s. Motor: ${motores.join(' + ')}.` + (ltError ? ` ${ltError}` : ''));
   } catch (err) {
     setEstado('Error al leer el PDF: ' + err.message);
   } finally {

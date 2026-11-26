@@ -80,7 +80,8 @@ export function createChecker(speller, opciones = {}) {
           motivo: g.motivo,
           sugerencias: g.sugerencia ? [g.sugerencia] : [],
           contexto: contextAround(text, g.start, g.end),
-          _pos: g.start,
+          inicio: g.start,
+          fin: g.end,
         });
       }
     }
@@ -97,11 +98,12 @@ export function createChecker(speller, opciones = {}) {
         motivo: 'Palabra no encontrada en el diccionario es_CL',
         sugerencias: suggest(word),
         contexto: ctx,
-        _pos: m.index,
+        inicio: m.index,
+        fin: m.index + word.length,
       });
     }
-    hallazgos.sort((a, b) => a._pos - b._pos);
-    for (const h of hallazgos) delete h._pos;
+    // inicio/fin: posición en el texto normalizado de la página (sirve para cruzar con LanguageTool).
+    hallazgos.sort((a, b) => a.inicio - b.inicio);
     return hallazgos;
   }
 

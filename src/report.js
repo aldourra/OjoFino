@@ -116,19 +116,23 @@ export function crearInforme(jsPDF, autoTable, { archivo, fecha = new Date(), pa
   y += 7;
   doc.text(limpiar(`Archivo: ${archivo}`), MARGEN, y);
   y += 5;
-  doc.text(`Fecha: ${fechaLocal(fecha)}    Páginas: ${paginas}    Motor: ${motores.join(' + ')}`, MARGEN, y);
+  doc.text(limpiar(`Fecha: ${fechaLocal(fecha)}    Páginas: ${paginas}    Motor: ${motores.join(' + ')}`), MARGEN, y);
 
   // Resumen
   const nOrt = hallazgos.filter((h) => h.tipo === 'ortografía').length;
   const nGram = hallazgos.filter((h) => h.tipo === 'gramática').length;
   const nPos = hallazgos.filter((h) => h.tipo === 'gramática (posible)').length;
+  const nLT = hallazgos.filter((h) => h.tipo === 'gramática (LanguageTool)').length;
   y += 8;
   doc.setFont(FUENTE, 'bold'); doc.setFontSize(11);
   const notaIgnoradas = ignorados.length ? ` (${ignorados.length} ignorada${ignorados.length === 1 ? '' : 's'}, al final)` : '';
   if (hallazgos.length === 0) {
     doc.text(`No se encontraron errores.${notaIgnoradas}`, MARGEN, y);
   } else {
-    doc.text(`${hallazgos.length} posibles errores: ${nOrt} de ortografía, ${nGram} de gramática y ${nPos} de gramática (posible).${notaIgnoradas}`, MARGEN, y);
+    const partes = nLT
+      ? `${nOrt} de ortografía, ${nGram} de gramática, ${nPos} de gramática (posible) y ${nLT} de LanguageTool`
+      : `${nOrt} de ortografía, ${nGram} de gramática y ${nPos} de gramática (posible)`;
+    doc.text(limpiar(`${hallazgos.length} posibles errores: ${partes}.${notaIgnoradas}`), MARGEN, y);
     const top = resumenPalabras(hallazgos);
     if (top.length) {
       y += 5.5;
@@ -149,7 +153,7 @@ export function crearInforme(jsPDF, autoTable, { archivo, fecha = new Date(), pa
     const cuerpo = hallazgos.map((h, i) => [
       String(h.pagina),
       limpiar(h.palabra),
-      limpiar(h.tipo),
+      limpiar(etiquetaTipo(h)),
       limpiar(h.motivo),
       // Texto invisible que solo reserva la altura; el contexto se dibuja después con la negrita.
       lineasPorFila[i].map((l) => l.map((t) => t.texto).join('')).join('\n'),
@@ -218,7 +222,7 @@ export function crearInforme(jsPDF, autoTable, { archivo, fecha = new Date(), pa
       margin: { left: MARGEN, right: MARGEN, top: MARGEN + 4, bottom: MARGEN + 6 },
       head: [['Pág.', 'Palabra', 'Tipo', 'Motivo', 'Ignorada']],
       body: ignorados.map((h) => [
-        String(h.pagina), limpiar(h.palabra), limpiar(h.tipo), limpiar(h.motivo),
+        String(h.pagina), limpiar(h.palabra), limpiar(etiquetaTipo(h)), limpiar(h.motivo),
         h.alcance === 'siempre' ? 'Siempre' : 'Solo en este documento',
       ]),
       theme: 'grid',
@@ -243,6 +247,11 @@ export function crearInforme(jsPDF, autoTable, { archivo, fecha = new Date(), pa
     doc.text(`Página ${p} de ${total}`, anchoPagina - MARGEN, altoPagina - MARGEN, { align: 'right' });
   }
   return doc;
+}
+
+/** Texto del tipo para mostrar: indica si el hallazgo vino de LanguageTool. */
+export function etiquetaTipo(h) {
+  return h.motor === 'LanguageTool' && !/LanguageTool/.test(h.tipo) ? `${h.tipo} (LanguageTool)` : h.tipo;
 }
 
 export function nombreInforme(archivo) {

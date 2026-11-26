@@ -4,7 +4,7 @@ Revisor de ortografía y gramática para PDF en español de Chile.
 Funciona en local (iPad/Mac), sin IA y sin enviar documentos a la nube.
 Entrega un informe en PDF con la página, la palabra y el motivo de cada error, sin corregir el original.
 
-Estado: **fase 4 lista** (lectura del PDF, ortografía, gramática local, informe PDF, diccionario personal e ignoradas). Ver `CLAUDE.md` para el plan y las fases.
+Estado: **fase 5 lista** (lectura del PDF, ortografía, gramática local, informe PDF, diccionario personal, ignoradas y LanguageTool opcional). Ver `CLAUDE.md` para el plan y las fases.
 
 ## Probar en el Mac
 
@@ -20,7 +20,7 @@ los módulos de JavaScript necesitan un servidor local).
 
 ```sh
 npm install             # solo herramientas de desarrollo
-npm test                # gramática, ajustes, revisión de test/prueba.pdf e informe PDF
+npm test                # gramática, ajustes, LanguageTool (simulado), test/prueba.pdf e informe PDF
 ```
 
 ## Estructura
@@ -36,6 +36,9 @@ npm test                # gramática, ajustes, revisión de test/prueba.pdf e in
 | `src/viewer.js` | Visor del informe dentro de la app y guardado/compartir |
 | `src/ajustes.js` | Diccionario personal, ignoradas, reglas, respaldo (sin DOM) |
 | `src/panel.js` | Panel "Mis ajustes" |
+| `src/languagetool.js` | Cliente del servidor LanguageTool propio (opcional) |
+| `docs/languagetool-mac.md` | Instalación de LanguageTool + Tailscale en el Mac |
+| `tools/lt-simulado.py` | Servidor LanguageTool simulado para pruebas |
 | `src/worker.js` | Carga el diccionario y revisa sin bloquear la pantalla |
 | `vendor/` | Librerías incluidas en el repositorio (sin CDN) |
 | `dict/` | Diccionario Hunspell es_CL |
@@ -68,6 +71,14 @@ npm test                # gramática, ajustes, revisión de test/prueba.pdf e in
   (diccionario `.txt`, respaldo completo `.json`, importar cualquiera de los dos; al importar se une con lo existente).
 - Se guarda en el almacenamiento local del navegador. Safari puede borrar los datos de una web que no se usa
   en 7 días, salvo que esté instalada en la pantalla de inicio (fase 6): conviene exportar un respaldo.
+
+## LanguageTool (opcional)
+
+Ver `docs/languagetool-mac.md`. En **Mis ajustes** se indica la dirección del servidor
+(`https://….ts.net` o `localhost`; por privacidad se rechaza cualquier otra). Cada página se revisa
+en paralelo con el motor local y LanguageTool; si coinciden en el mismo error se muestra una sola vez.
+Si el servidor no responde en 10 s, se continúa solo con el motor local y se indica en el informe.
+La página solo permite conexiones a `*.ts.net` y `localhost` (Content-Security-Policy).
 
 ## Reglas de gramática
 

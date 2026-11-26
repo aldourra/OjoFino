@@ -79,7 +79,7 @@ button.mini.sutil { color: var(--suave); border-color: var(--borde); }
 .panel-cuerpo h3 span { color: var(--suave); font-weight: 400; }
 .panel-aviso { color: var(--acento); font-weight: 600; min-height: 1.2em; margin: .5rem 0 0; }
 .ayuda { color: var(--suave); margin: .2rem 0 .6rem; font-size: .9rem; }
-.fila-form { display: flex; gap: .5rem; margin-bottom: .5rem; }
+.fila-form { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: .5rem; }
 .fila-form input {
   flex: 1; font: inherit; padding: .45rem .6rem; border-radius: .45rem; border: 1.5px solid var(--borde);
   background: transparent; color: inherit; min-width: 0;

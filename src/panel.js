@@ -2,8 +2,9 @@
 import { REGLAS } from './grammar.js';
 import {
   agregarPalabra, quitarPalabra, quitarIgnorada, alternarRegla,
-  diccionarioATexto, respaldoAJson, importar,
+  diccionarioATexto, respaldoAJson, importar, fijarServidorLT,
 } from './ajustes.js';
+import { normalizarServidor, probarServidor } from './languagetool.js';
 
 const el = (tag, props = {}, ...hijos) => {
   const n = Object.assign(document.createElement(tag), props);
@@ -45,6 +46,16 @@ export function crearPanelAjustes({ obtener, cambiar, guardarArchivo, avisar }) 
         <ul data-lista="reglas" class="lista reglas"></ul>
       </section>
       <section>
+        <h3>LanguageTool (opcional)</h3>
+        <p class="ayuda">Servidor propio en tu Mac, accesible por Tailscale (https://…ts.net). Déjalo vacío para usar solo el motor local.</p>
+        <form data-form="lt" class="fila-form">
+          <input type="url" name="servidor" placeholder="https://mi-mac.tu-red.ts.net" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="Dirección del servidor LanguageTool">
+          <button type="submit" class="mini">Guardar</button>
+          <button type="button" class="mini" data-accion="probar-lt">Probar conexión</button>
+        </form>
+        <p class="ayuda" data-estado-lt></p>
+      </section>
+      <section>
         <h3>Respaldo</h3>
         <p class="ayuda">Los ajustes se guardan solo en este dispositivo. Exporta un respaldo de vez en cuando.</p>
         <div class="fila-botones">
@@ -81,6 +92,9 @@ export function crearPanelAjustes({ obtener, cambiar, guardarArchivo, avisar }) 
           el('button', { type: 'button', className: 'mini sutil', textContent: 'Restaurar', onclick: () => cambiar(quitarIgnorada(obtener(), i)) })))
       : [el('li', { className: 'vacio', textContent: 'No hay alarmas ignoradas.' })]));
 
+    const campoLT = q('[data-form="lt"] input');
+    if (document.activeElement !== campoLT) campoLT.value = aj.servidorLT || '';
+
     const desactivadas = new Set(aj.reglasDesactivadas);
     q('[data-lista="reglas"]').replaceChildren(...REGLAS.map((r) => {
       const check = el('input', { type: 'checkbox', checked: !desactivadas.has(r.id) });
@@ -99,10 +113,39 @@ export function crearPanelAjustes({ obtener, cambiar, guardarArchivo, avisar }) 
     cambiar(nuevo);
   });
 
+  const estadoLT = (t) => { q('[data-estado-lt]').textContent = t; };
+  function leerServidor() {
+    try {
+      return normalizarServidor(q('[data-form="lt"] input').value);
+    } catch (err) {
+      estadoLT(err.message);
+      return null;
+    }
+  }
+  q('[data-form="lt"]').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const url = leerServidor();
+    if (url === null) return;
+    cambiar(fijarServidorLT(obtener(), url));
+    q('[data-form="lt"] input').value = url;
+    estadoLT(url ? 'Guardado. Las próximas revisiones usarán LanguageTool.' : 'Sin servidor: se usa solo el motor local.');
+  });
+
   capa.addEventListener('click', async (e) => {
     const accion = e.target.closest('[data-accion]')?.dataset.accion;
     const enc = new TextEncoder();
     if (accion === 'cerrar') cerrar();
+    else if (accion === 'probar-lt') {
+      const url = leerServidor();
+      if (!url) { if (url === '') estadoLT('Escribe primero la dirección del servidor.'); return; }
+      estadoLT('Probando…');
+      try {
+        const { version } = await probarServidor(url);
+        estadoLT(`Conectado: LanguageTool ${version}.`);
+      } catch (err) {
+        estadoLT(err.message);
+      }
+    }
     else if (accion === 'exp-txt') {
       await guardarArchivo(enc.encode(diccionarioATexto(obtener())), `ojofino-diccionario-${fechaArchivo()}.txt`, 'text/plain');
     } else if (accion === 'exp-json') {
@@ -130,7 +173,7 @@ export function crearPanelAjustes({ obtener, cambiar, guardarArchivo, avisar }) 
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !capa.hidden) cerrar(); });
 
   return {
-    abrir() { q('.panel-aviso').textContent = ''; dibujar(obtener()); capa.hidden = false; document.body.classList.add('sin-scroll'); },
+    abrir() { q('.panel-aviso').textContent = ''; estadoLT(''); dibujar(obtener()); capa.hidden = false; document.body.classList.add('sin-scroll'); },
     actualizar(aj) { if (!capa.hidden) dibujar(aj); },
     cerrar,
   };

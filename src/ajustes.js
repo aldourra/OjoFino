@@ -6,7 +6,7 @@ export const CLAVE_STORAGE = 'ojofino.ajustes.v1';
 const VERSION = 1;
 
 export function ajustesVacios() {
-  return { version: VERSION, diccionario: [], ignoradas: [], reglasDesactivadas: [] };
+  return { version: VERSION, diccionario: [], ignoradas: [], reglasDesactivadas: [], servidorLT: '' };
 }
 
 const normalizar = (t) => String(t).toLowerCase().replace(/\s+/g, ' ').trim();
@@ -110,6 +110,11 @@ export function alternarRegla(aj, id, activa) {
   return { ...aj, reglasDesactivadas: [...set].sort() };
 }
 
+/** Guarda la dirección del servidor LanguageTool (ya validada con normalizarServidor). */
+export function fijarServidorLT(aj, url) {
+  return { ...aj, servidorLT: url };
+}
+
 // ---------------------------------------------------------------------------
 // Exportar / importar
 
@@ -151,6 +156,10 @@ export function importar(aj, contenido, nombreArchivo = '') {
     if (Array.isArray(datos.reglasDesactivadas)) {
       nuevo = { ...nuevo, reglasDesactivadas: [...new Set([...nuevo.reglasDesactivadas, ...datos.reglasDesactivadas.map(String)])].sort() };
     }
+    // El servidor solo se toma del respaldo si aquí no hay uno configurado.
+    if (!nuevo.servidorLT && typeof datos.servidorLT === 'string' && /^https:\/\/[^/]+\.ts\.net(\/|$)|^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?(\/|$)/.test(datos.servidorLT)) {
+      nuevo = { ...nuevo, servidorLT: datos.servidorLT };
+    }
   } else {
     for (const linea of texto.split(/\r?\n/)) {
       const antes = nuevo.diccionario.length;
@@ -174,6 +183,7 @@ export function cargarAjustes(storage) {
       diccionario: Array.isArray(datos.diccionario) ? datos.diccionario : [],
       ignoradas: Array.isArray(datos.ignoradas) ? datos.ignoradas : [],
       reglasDesactivadas: Array.isArray(datos.reglasDesactivadas) ? datos.reglasDesactivadas : [],
+      servidorLT: typeof datos.servidorLT === 'string' ? datos.servidorLT : '',
     };
   } catch {
     return ajustesVacios();
