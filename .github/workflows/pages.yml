@@ -17,11 +17,9 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  probar-y-publicar:
+  # 1) Pruebas y armado del sitio. Solo si todo pasa se sube el paquete.
+  probar:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deploy.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
 
@@ -47,11 +45,19 @@ jobs:
           cp -r index.html styles.css manifest.webmanifest sw.js icons src vendor dict _site/
           touch _site/.nojekyll
 
-      # Mismas versiones que la plantilla oficial de GitHub para sitios estáticos:
-      # upload-pages-artifact@v5 no es compatible con deploy-pages@v5.
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site
+
+  # 2) Publicación en un job aparte, como recomienda actions/deploy-pages:
+  #    en el mismo job el paquete recién subido a veces aún no aparece.
+  publicar:
+    needs: probar
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
       - id: deploy
         uses: actions/deploy-pages@v5
