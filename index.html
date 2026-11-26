@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; worker-src 'self' blob:; style-src 'self'; img-src 'self' data:; connect-src 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; worker-src 'self' blob:; style-src 'self'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'">
   <title>OjoFino</title>
   <link rel="stylesheet" href="styles.css">
 </head>
@@ -19,6 +19,10 @@
     </label>
     <p id="estado" role="status">Cargando diccionario…</p>
     <p id="resumen"></p>
+    <div id="acciones" hidden>
+      <button type="button" id="ver-informe" class="boton">Ver informe</button>
+      <button type="button" id="guardar-informe" class="boton secundario">Guardar informe PDF</button>
+    </div>
     <div class="tabla">
       <table id="resultados">
         <thead>

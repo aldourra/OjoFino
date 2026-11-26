@@ -4,7 +4,7 @@ Revisor de ortografía y gramática para PDF en español de Chile.
 Funciona en local (iPad/Mac), sin IA y sin enviar documentos a la nube.
 Entrega un informe en PDF con la página, la palabra y el motivo de cada error, sin corregir el original.
 
-Estado: **fase 2 lista** (lectura del PDF, ortografía y gramática local). Ver `CLAUDE.md` para el plan y las fases.
+Estado: **fase 3 lista** (lectura del PDF, ortografía, gramática local e informe PDF). Ver `CLAUDE.md` para el plan y las fases.
 
 ## Probar en el Mac
 
@@ -20,7 +20,7 @@ los módulos de JavaScript necesitan un servidor local).
 
 ```sh
 npm install             # solo herramientas de desarrollo
-npm test                # reglas de gramática + revisión completa de test/prueba.pdf
+npm test                # gramática + revisión de test/prueba.pdf + informe PDF
 ```
 
 ## Estructura
@@ -32,6 +32,8 @@ npm test                # reglas de gramática + revisión completa de test/prue
 | `src/pdftext.js` | Extracción de texto por página (pdf.js) |
 | `src/checker.js` | Revisión ortográfica y unión con la gramática (sin dependencias del navegador) |
 | `src/grammar.js` | Reglas de gramática locales |
+| `src/report.js` | Informe PDF (jsPDF + AutoTable) |
+| `src/viewer.js` | Visor del informe dentro de la app y guardado/compartir |
 | `src/worker.js` | Carga el diccionario y revisa sin bloquear la pantalla |
 | `vendor/` | Librerías incluidas en el repositorio (sin CDN) |
 | `dict/` | Diccionario Hunspell es_CL |
@@ -43,6 +45,13 @@ npm test                # reglas de gramática + revisión completa de test/prue
 - Omite URLs, correos y rutas.
 - Omite siglas en mayúsculas (OKE, ONT, TMF).
 - Las sugerencias son solo referencia; nunca se modifica el PDF.
+
+## Informe
+
+- **Ver informe**: lo genera en memoria y lo muestra dentro de la app (pdf.js), con zoom. No guarda nada.
+- **Guardar informe PDF**: en iPad abre el menú de compartir (Archivos, Obsidian…); en otros navegadores lo descarga.
+- Nombre: `<archivo>-revision-OjoFino.pdf`. A4 horizontal, con encabezado, resumen, tabla y "Página X de Y".
+- Incrusta la fuente Liberation Sans para que se vea igual en cualquier visor.
 
 ## Reglas de gramática
 
@@ -68,6 +77,9 @@ concordancia de género y frases que cruzan de una página a otra.
 |---|---|---|
 | [pdf.js](https://github.com/mozilla/pdf.js) | 4.10.38 | Apache-2.0 |
 | [nspell](https://github.com/wooorm/nspell) | 2.1.5 | MIT |
+| [jsPDF](https://github.com/parallax/jsPDF) | 4.2.1 | MIT |
+| [jsPDF-AutoTable](https://github.com/simonbengtsson/jsPDF-AutoTable) | 5.0.9 | MIT |
+| Liberation Sans (incluida en pdf.js) | — | SIL Open Font License 1.1 |
 | Diccionario es_CL ([RLA-ES](https://github.com/sbosio/rla-es), vía [wooorm/dictionaries](https://github.com/wooorm/dictionaries)) | 2.0.0 | GPL-3.0 / LGPL-3.0 / MPL-1.1 |
 
 Los textos de cada licencia están en `vendor/*/LICENSE` y `dict/LICENSE`.

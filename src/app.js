@@ -1,5 +1,8 @@
 import * as pdfjsLib from '../vendor/pdfjs/pdf.min.mjs';
 import { extractPages } from './pdftext.js';
+import { jsPDF, autoTable } from '../vendor/jspdf/jspdf.mjs';
+import { crearInforme, nombreInforme, aBase64 } from './report.js';
+import { crearVisor, guardarPdf } from './viewer.js';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL('../vendor/pdfjs/pdf.worker.min.mjs', import.meta.url).href;
 
@@ -8,6 +11,36 @@ const estado = $('#estado');
 const entrada = $('#archivo');
 const tabla = $('#resultados tbody');
 const resumen = $('#resumen');
+const acciones = $('#acciones');
+
+// Último resultado: vive solo en memoria mientras la app está abierta.
+let ultimo = null;
+
+// Fuentes que se incrustan en el informe (las mismas que usa pdf.js). Se cargan al inicio
+// para que generar el informe sea instantáneo y el menú de compartir funcione en Safari.
+let fuentes = null;
+Promise.all(['LiberationSans-Regular.ttf', 'LiberationSans-Bold.ttf'].map((f) =>
+  fetch(new URL(`../vendor/pdfjs/standard_fonts/${f}`, import.meta.url)).then((r) => r.arrayBuffer())))
+  .then(([regular, bold]) => { fuentes = { regular: aBase64(regular), bold: aBase64(bold) }; })
+  .catch(() => { fuentes = null; }); // sin ellas se usa Helvetica estándar
+
+function bytesInforme() {
+  const doc = crearInforme(jsPDF, autoTable, ultimo, fuentes);
+  return new Uint8Array(doc.output('arraybuffer'));
+}
+
+async function guardarInforme() {
+  if (!ultimo) return;
+  const r = await guardarPdf(bytesInforme(), nombreInforme(ultimo.archivo));
+  if (r === 'descargado') setEstado('Informe descargado.');
+  else if (r === 'compartido') setEstado('Informe compartido.');
+}
+
+const visor = crearVisor(pdfjsLib, { onGuardar: guardarInforme });
+$('#ver-informe').addEventListener('click', () => {
+  if (ultimo) visor.abrir(bytesInforme()).catch((err) => setEstado('No se pudo mostrar el informe: ' + err.message));
+});
+$('#guardar-informe').addEventListener('click', guardarInforme);
 
 const worker = new Worker(new URL('./worker.js', import.meta.url), { type: 'module' });
 let seq = 0;
@@ -66,6 +99,9 @@ entrada.addEventListener('change', async () => {
   await listo;
   tabla.replaceChildren();
   resumen.textContent = '';
+  acciones.hidden = true;
+  ultimo = null;
+  const todos = [];
   entrada.disabled = true;
   const t0 = performance.now();
   let total = 0;
@@ -74,10 +110,12 @@ entrada.addEventListener('change', async () => {
     const paginas = await extractPages(pdfjsLib, data, async (n, texto, tot) => {
       setEstado(`Revisando página ${n} de ${tot}…`);
       const r = await llamar({ tipo: 'pagina', pagina: n, texto });
-      r.hallazgos.forEach((h) => tabla.append(fila(h)));
+      r.hallazgos.forEach((h) => { tabla.append(fila(h)); todos.push(h); });
       total += r.hallazgos.length;
     });
     const seg = ((performance.now() - t0) / 1000).toFixed(1);
+    ultimo = { archivo: file.name, fecha: new Date(), paginas, motores: ['local'], hallazgos: todos };
+    acciones.hidden = false;
     setEstado(`Listo: ${paginas} páginas en ${seg} s.`);
     resumen.textContent = total
       ? `${total} posibles errores en “${file.name}”.`
