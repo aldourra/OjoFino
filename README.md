@@ -4,7 +4,11 @@ Revisor de ortografía y gramática para PDF en español de Chile.
 Funciona en local (iPad/Mac), sin IA y sin enviar documentos a la nube.
 Entrega un informe en PDF con la página, la palabra y el motivo de cada error, sin corregir el original.
 
-Estado: **fase 5 lista** (lectura del PDF, ortografía, gramática local, informe PDF, diccionario personal, ignoradas y LanguageTool opcional). Ver `CLAUDE.md` para el plan y las fases.
+Estado: **versión 1.0** — las 6 fases del plan están completas. Funciona sin internet y se instala en el iPad.
+
+- Publicar: `docs/publicar.md`
+- Probar en el iPad: `docs/prueba-ipad.md`
+- LanguageTool en el Mac (opcional): `docs/languagetool-mac.md` Ver `CLAUDE.md` para el plan y las fases.
 
 ## Probar en el Mac
 
@@ -20,7 +24,8 @@ los módulos de JavaScript necesitan un servidor local).
 
 ```sh
 npm install             # solo herramientas de desarrollo
-npm test                # gramática, ajustes, LanguageTool (simulado), test/prueba.pdf e informe PDF
+npm test                # gramática, ajustes, LanguageTool (simulado), service worker, test/prueba.pdf e informe PDF
+npm run sw              # actualiza la lista de archivos del modo sin conexión (tras cambiar la app)
 ```
 
 ## Estructura
@@ -39,6 +44,9 @@ npm test                # gramática, ajustes, LanguageTool (simulado), test/pru
 | `src/languagetool.js` | Cliente del servidor LanguageTool propio (opcional) |
 | `docs/languagetool-mac.md` | Instalación de LanguageTool + Tailscale en el Mac |
 | `tools/lt-simulado.py` | Servidor LanguageTool simulado para pruebas |
+| `sw.js`, `src/actualizacion.js` | Modo sin conexión y aviso de versión nueva |
+| `manifest.webmanifest`, `icons/` | Instalación en la pantalla de inicio |
+| `.github/workflows/pages.yml` | Pruebas + publicación en GitHub Pages |
 | `src/worker.js` | Carga el diccionario y revisa sin bloquear la pantalla |
 | `vendor/` | Librerías incluidas en el repositorio (sin CDN) |
 | `dict/` | Diccionario Hunspell es_CL |
@@ -79,6 +87,12 @@ Ver `docs/languagetool-mac.md`. En **Mis ajustes** se indica la dirección del s
 en paralelo con el motor local y LanguageTool; si coinciden en el mismo error se muestra una sola vez.
 Si el servidor no responde en 10 s, se continúa solo con el motor local y se indica en el informe.
 La página solo permite conexiones a `*.ts.net` y `localhost` (Content-Security-Policy).
+
+## Instalación y uso sin internet
+
+- En el iPad: Safari → Compartir → **Agregar a pantalla de inicio**. Instalada, Safari no borra sus datos por falta de uso.
+- La primera vez guarda toda la app (unos 3,5 MB). Después funciona sin conexión.
+- Cuando hay una versión publicada nueva aparece **"Hay una versión nueva — Actualizar"**; no se actualiza en medio de una revisión.
 
 ## Reglas de gramática
 

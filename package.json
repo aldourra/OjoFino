@@ -1,15 +1,16 @@
 {
   "name": "ojofino",
-  "version": "0.5.0",
+  "version": "1.0.0",
   "private": true,
   "description": "Revisor de ortografía y gramática para PDF en español de Chile, local y sin IA",
   "type": "module",
   "scripts": {
     "servir": "python3 -m http.server 8080",
-    "test": "node test/gramatica.mjs && node test/ajustes.mjs && node test/languagetool.mjs && node test/prueba.mjs && node test/informe.mjs",
+    "test": "node test/gramatica.mjs && node test/ajustes.mjs && node test/languagetool.mjs && node test/sw.mjs && node test/prueba.mjs && node test/informe.mjs",
     "pdf-prueba": "node tools/crear-pdf-prueba.mjs",
     "vendor": "sh tools/actualizar-vendor.sh",
-    "lt-simulado": "python3 tools/lt-simulado.py 8081"
+    "lt-simulado": "python3 tools/lt-simulado.py 8081",
+    "sw": "node tools/generar-sw.mjs"
   },
   "devDependencies": {
     "dictionary-es-cl": "2.0.0",

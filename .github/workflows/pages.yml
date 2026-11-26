@@ -1,0 +1,55 @@
+# Publica OjoFino en GitHub Pages. Solo se publica si todas las pruebas pasan,
+# y solo los archivos de la app (no las pruebas, herramientas ni documentos).
+name: Publicar en GitHub Pages
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  probar-y-publicar:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Instalar herramientas de prueba
+        run: npm ci
+
+      - name: Pruebas
+        run: npm test
+
+      - name: Verificar que sw.js está al día
+        run: |
+          node tools/generar-sw.mjs
+          git diff --exit-code sw.js || (echo "::error::sw.js no está al día: ejecuta 'npm run sw' y haz commit" && exit 1)
+
+      - name: Preparar sitio
+        run: |
+          mkdir _site
+          cp -r index.html styles.css manifest.webmanifest sw.js icons src vendor dict _site/
+          touch _site/.nojekyll
+
+      - uses: actions/configure-pages@v6
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: _site
+      - id: deploy
+        uses: actions/deploy-pages@v5

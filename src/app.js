@@ -9,6 +9,7 @@ import {
   cargarAjustes, guardarAjustes, filtrar, ignorar, restaurar, agregarPalabra,
 } from './ajustes.js';
 import { crearPanelAjustes } from './panel.js';
+import { iniciarModoSinConexion } from './actualizacion.js';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL('../vendor/pdfjs/pdf.worker.min.mjs', import.meta.url).href;
 
@@ -194,6 +195,10 @@ async function idDocumento(data, file) {
   }
 }
 
+// Uso sin internet + aviso de versión nueva (no se actualiza a mitad de una revisión).
+let revisando = false;
+iniciarModoSinConexion({ ocupado: () => revisando });
+
 const listo = llamar({ tipo: 'init' })
   .then(async (r) => {
     if (ajustes.diccionario.length) await llamar({ tipo: 'diccionario', palabras: ajustes.diccionario });
@@ -214,6 +219,7 @@ entrada.addEventListener('change', async () => {
   ultimo = null;
   const todos = [];
   entrada.disabled = true;
+  revisando = true;
   const t0 = performance.now();
   try {
     const data = new Uint8Array(await file.arrayBuffer());
@@ -250,6 +256,7 @@ entrada.addEventListener('change', async () => {
   } catch (err) {
     setEstado('Error al leer el PDF: ' + err.message);
   } finally {
+    revisando = false;
     entrada.disabled = false;
     entrada.value = '';
   }

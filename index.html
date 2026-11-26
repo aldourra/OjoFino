@@ -2,12 +2,24 @@
 <html lang="es-CL">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; worker-src 'self' blob:; style-src 'self'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://*.ts.net http://localhost:* http://127.0.0.1:*">
+  <meta name="theme-color" content="#2f5d50">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="OjoFino">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/favicon-32.png" type="image/png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <title>OjoFino</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+  <div id="aviso-version" class="aviso-version" role="status" hidden>
+    <span>Hay una versión nueva de OjoFino.</span>
+    <button type="button" class="mini">Actualizar</button>
+  </div>
   <header>
     <div class="cabecera">
       <h1>OjoFino</h1>

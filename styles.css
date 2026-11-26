@@ -90,3 +90,11 @@ button.mini.sutil { color: var(--suave); border-color: var(--borde); }
 .lista li.vacio { color: var(--suave); }
 .lista.reglas li { justify-content: flex-start; }
 .lista.reglas small { color: var(--suave); }
+
+.aviso-version {
+  display: flex; align-items: center; justify-content: center; gap: .75rem; flex-wrap: wrap;
+  padding: .6rem 1rem; padding-top: max(.6rem, env(safe-area-inset-top));
+  background: var(--marca); color: var(--texto); font-weight: 600;
+}
+.aviso-version[hidden] { display: none; }
+header { padding-top: max(1rem, env(safe-area-inset-top)); }
