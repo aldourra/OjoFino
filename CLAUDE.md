@@ -29,6 +29,14 @@ La app **nunca modifica el PDF original** ni aplica correcciones.
 - Acceso desde el iPad vía Tailscale con HTTPS (`tailscale serve`), CORS habilitado (`--allow-origin`)
 - Si no responde, la app continúa solo con el motor local y lo indica en el informe
 
+**Ignoradas:**
+- Botón "Ignorar" en cada hallazgo: "Solo en este documento" o "Siempre"
+- Ortografía: se ignora la palabra; gramática: la regla para ese texto (también hallazgos de LanguageTool)
+- Sección "Ignoradas" plegada al final de la pantalla y del informe PDF, con opción de restaurar
+- Diferencia con el diccionario personal: el diccionario dice "esta palabra está bien escrita";
+  ignorar dice "no me muestres esta alarma"
+- Se guarda en el iPad y se exporta/importa junto con el diccionario personal
+
 **Diccionario personal:**
 - Guardado en el iPad (IndexedDB/localStorage con try/catch)
 - Exportar/importar como `.txt` (una palabra por línea) para respaldo y edición en Obsidian
@@ -46,7 +54,7 @@ La app **nunca modifica el PDF original** ni aplica correcciones.
 1. Lectura del PDF + revisión ortográfica con Hunspell (validar rendimiento del diccionario español en iPad)
 2. Reglas de gramática locales
 3. Informe en PDF
-4. Diccionario personal
+4. Diccionario personal e ignoradas
 5. Conexión opcional con LanguageTool en el Mac
 6. PWA offline + publicación en GitHub Pages
 
