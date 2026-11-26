@@ -9,7 +9,10 @@
 </head>
 <body>
   <header>
-    <h1>OjoFino</h1>
+    <div class="cabecera">
+      <h1>OjoFino</h1>
+      <button type="button" id="abrir-ajustes" class="boton secundario">Mis ajustes</button>
+    </div>
     <p>Revisión de ortografía y gramática en PDF. Todo se procesa en este dispositivo.</p>
   </header>
   <main>
@@ -26,11 +29,20 @@
     <div class="tabla">
       <table id="resultados">
         <thead>
-          <tr><th>Pág.</th><th>Palabra</th><th>Tipo</th><th>Motivo</th><th>Contexto</th><th>Sugerencia (referencia)</th></tr>
+          <tr><th>Pág.</th><th>Palabra</th><th>Tipo</th><th>Motivo</th><th>Contexto</th><th>Sugerencia (referencia)</th><th><span class="oculto">Acciones</span></th></tr>
         </thead>
         <tbody></tbody>
       </table>
     </div>
+    <details id="ignoradas" hidden>
+      <summary>Ignoradas (<span id="n-ignoradas">0</span>)</summary>
+      <div class="tabla">
+        <table id="tabla-ignoradas">
+          <thead><tr><th>Pág.</th><th>Palabra</th><th>Tipo</th><th>Motivo</th><th>Ignorada</th><th><span class="oculto">Acciones</span></th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </details>
   </main>
   <script type="module" src="src/app.js"></script>
 </body>

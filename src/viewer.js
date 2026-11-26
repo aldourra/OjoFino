@@ -80,9 +80,9 @@ export function crearVisor(pdfjsLib, { onGuardar }) {
   };
 }
 
-/** Guarda o comparte el PDF. En iPad abre el menú de compartir. */
-export async function guardarPdf(bytes, nombre) {
-  const archivo = new File([bytes], nombre, { type: 'application/pdf' });
+/** Guarda o comparte un archivo. En iPad abre el menú de compartir. */
+export async function guardarArchivo(bytes, nombre, tipo = 'application/pdf') {
+  const archivo = new File([bytes], nombre, { type: tipo });
   if (navigator.canShare && navigator.canShare({ files: [archivo] })) {
     try {
       await navigator.share({ files: [archivo], title: nombre });

@@ -17,7 +17,8 @@ const fuentes = {
   regular: aBase64(leer('../vendor/pdfjs/standard_fonts/LiberationSans-Regular.ttf')),
   bold: aBase64(leer('../vendor/pdfjs/standard_fonts/LiberationSans-Bold.ttf')),
 };
-const doc = crearInforme(jsPDF, autoTable, { archivo: 'prueba.pdf', fecha: new Date(2026, 10, 26, 17, 45), paginas, hallazgos }, fuentes);
+const ignorados = [{ ...hallazgos.find((h) => h.palabra === 'iPad'), alcance: 'siempre' }];
+const doc = crearInforme(jsPDF, autoTable, { archivo: 'prueba.pdf', fecha: new Date(2026, 10, 26, 17, 45), paginas, hallazgos, ignorados }, fuentes);
 const bytes = new Uint8Array(doc.output('arraybuffer'));
 const salida = process.argv[2];
 if (salida) fs.writeFileSync(salida, bytes);
@@ -30,7 +31,7 @@ const fallas = [];
 for (const h of hallazgos) if (!plano.includes(h.palabra)) fallas.push(`falta «${h.palabra}»`);
 for (const esperado of ['OjoFino: informe de revisión', 'Archivo: prueba.pdf', '26-11-2026 17:45', 'Páginas: 2',
   '13 posibles errores: 4 de ortografía, 7 de gramática y 2 de gramática (posible).',
-  'Palabras no reconocidas más frecuentes', 'Página 1 de', 'el documento no salió del dispositivo']) {
+  'Palabras no reconocidas más frecuentes', '(1 ignorada, al final)', 'Ignoradas (1)', 'Siempre', 'Página 1 de', 'el documento no salió del dispositivo']) {
   if (!plano.includes(esperado)) fallas.push(`falta el texto «${esperado}»`);
 }
 // Informe vacío

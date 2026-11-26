@@ -101,7 +101,7 @@ function resumenPalabras(hallazgos, max = 10) {
  * @param fuentes  { regular, bold } en base64 (opcional; ver registrarFuentes)
  * @returns jsPDF (usar .output('arraybuffer') o .output('blob'))
  */
-export function crearInforme(jsPDF, autoTable, { archivo, fecha = new Date(), paginas, motores = ['local'], hallazgos }, fuentes = null) {
+export function crearInforme(jsPDF, autoTable, { archivo, fecha = new Date(), paginas, motores = ['local'], hallazgos, ignorados = [] }, fuentes = null) {
   const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
   registrarFuentes(doc, fuentes);
   doc.setProperties({ title: `Revisión OjoFino: ${archivo}`, creator: 'OjoFino' });
@@ -124,10 +124,11 @@ export function crearInforme(jsPDF, autoTable, { archivo, fecha = new Date(), pa
   const nPos = hallazgos.filter((h) => h.tipo === 'gramática (posible)').length;
   y += 8;
   doc.setFont(FUENTE, 'bold'); doc.setFontSize(11);
+  const notaIgnoradas = ignorados.length ? ` (${ignorados.length} ignorada${ignorados.length === 1 ? '' : 's'}, al final)` : '';
   if (hallazgos.length === 0) {
-    doc.text('No se encontraron errores.', MARGEN, y);
+    doc.text(`No se encontraron errores.${notaIgnoradas}`, MARGEN, y);
   } else {
-    doc.text(`${hallazgos.length} posibles errores: ${nOrt} de ortografía, ${nGram} de gramática y ${nPos} de gramática (posible).`, MARGEN, y);
+    doc.text(`${hallazgos.length} posibles errores: ${nOrt} de ortografía, ${nGram} de gramática y ${nPos} de gramática (posible).${notaIgnoradas}`, MARGEN, y);
     const top = resumenPalabras(hallazgos);
     if (top.length) {
       y += 5.5;
@@ -201,6 +202,34 @@ export function crearInforme(jsPDF, autoTable, { archivo, fecha = new Date(), pa
           yy += alto;
         }
         doc.setFont(FUENTE, 'normal');
+      },
+    });
+  }
+
+  // Sección de ignoradas
+  if (ignorados.length) {
+    let yIg = hallazgos.length ? doc.lastAutoTable.finalY + 10 : y + 10;
+    if (yIg > altoPagina - MARGEN - 30) { doc.addPage(); yIg = MARGEN + 6; }
+    doc.setFont(FUENTE, 'bold'); doc.setFontSize(11); doc.setTextColor(29, 29, 27);
+    doc.text(`Ignoradas (${ignorados.length})`, MARGEN, yIg);
+    doc.setFont(FUENTE, 'normal');
+    autoTable(doc, {
+      startY: yIg + 3,
+      margin: { left: MARGEN, right: MARGEN, top: MARGEN + 4, bottom: MARGEN + 6 },
+      head: [['Pág.', 'Palabra', 'Tipo', 'Motivo', 'Ignorada']],
+      body: ignorados.map((h) => [
+        String(h.pagina), limpiar(h.palabra), limpiar(h.tipo), limpiar(h.motivo),
+        h.alcance === 'siempre' ? 'Siempre' : 'Solo en este documento',
+      ]),
+      theme: 'grid',
+      styles: { font: FUENTE, fontSize: TAM_TABLA, cellPadding: PADDING, lineColor: [210, 210, 205], lineWidth: 0.2, textColor: [107, 107, 102], valign: 'top' },
+      headStyles: { fillColor: [150, 150, 144], textColor: 255, fontStyle: 'bold' },
+      columnStyles: {
+        0: { cellWidth: ANCHOS.pag, halign: 'center' },
+        1: { cellWidth: ANCHOS.palabra },
+        2: { cellWidth: ANCHOS.tipo },
+        3: { cellWidth: ANCHOS.motivo + ANCHOS.contexto },
+        4: { cellWidth: ANCHOS.sugerencia },
       },
     });
   }

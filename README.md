@@ -4,7 +4,7 @@ Revisor de ortografía y gramática para PDF en español de Chile.
 Funciona en local (iPad/Mac), sin IA y sin enviar documentos a la nube.
 Entrega un informe en PDF con la página, la palabra y el motivo de cada error, sin corregir el original.
 
-Estado: **fase 3 lista** (lectura del PDF, ortografía, gramática local e informe PDF). Ver `CLAUDE.md` para el plan y las fases.
+Estado: **fase 4 lista** (lectura del PDF, ortografía, gramática local, informe PDF, diccionario personal e ignoradas). Ver `CLAUDE.md` para el plan y las fases.
 
 ## Probar en el Mac
 
@@ -20,7 +20,7 @@ los módulos de JavaScript necesitan un servidor local).
 
 ```sh
 npm install             # solo herramientas de desarrollo
-npm test                # gramática + revisión de test/prueba.pdf + informe PDF
+npm test                # gramática, ajustes, revisión de test/prueba.pdf e informe PDF
 ```
 
 ## Estructura
@@ -34,6 +34,8 @@ npm test                # gramática + revisión de test/prueba.pdf + informe PD
 | `src/grammar.js` | Reglas de gramática locales |
 | `src/report.js` | Informe PDF (jsPDF + AutoTable) |
 | `src/viewer.js` | Visor del informe dentro de la app y guardado/compartir |
+| `src/ajustes.js` | Diccionario personal, ignoradas, reglas, respaldo (sin DOM) |
+| `src/panel.js` | Panel "Mis ajustes" |
 | `src/worker.js` | Carga el diccionario y revisa sin bloquear la pantalla |
 | `vendor/` | Librerías incluidas en el repositorio (sin CDN) |
 | `dict/` | Diccionario Hunspell es_CL |
@@ -52,6 +54,20 @@ npm test                # gramática + revisión de test/prueba.pdf + informe PD
 - **Guardar informe PDF**: en iPad abre el menú de compartir (Archivos, Obsidian…); en otros navegadores lo descarga.
 - Nombre: `<archivo>-revision-OjoFino.pdf`. A4 horizontal, con encabezado, resumen, tabla y "Página X de Y".
 - Incrusta la fuente Liberation Sans para que se vea igual en cualquier visor.
+
+## Diccionario personal e ignoradas
+
+- **+ Diccionario** (ortografía): la palabra pasa a considerarse correcta. Una entrada en minúsculas
+  también acepta mayúscula inicial o todo en mayúsculas; una con mayúsculas ("iPad") solo se acepta tal cual.
+- **Ignorar → Solo en este documento**: oculta esa alarma en ese PDF (reconocido por una huella SHA-256
+  de su contenido, calculada en el dispositivo; sirve aunque cambie de nombre).
+- **Ignorar → Siempre**: oculta esa alarma en cualquier PDF. Ortografía: la palabra. Gramática: la regla
+  para ese texto.
+- Lo ignorado queda en la sección plegada **Ignoradas** (pantalla e informe), con **Restaurar**.
+- **Mis ajustes**: diccionario, ignoradas, activar/desactivar reglas y respaldo
+  (diccionario `.txt`, respaldo completo `.json`, importar cualquiera de los dos; al importar se une con lo existente).
+- Se guarda en el almacenamiento local del navegador. Safari puede borrar los datos de una web que no se usa
+  en 7 días, salvo que esté instalada en la pantalla de inicio (fase 6): conviene exportar un respaldo.
 
 ## Reglas de gramática
 
