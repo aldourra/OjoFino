@@ -2,6 +2,7 @@
   "name": "ojofino",
   "version": "1.0.0",
   "private": true,
+  "license": "MIT",
   "description": "Revisor de ortografía y gramática para PDF en español de Chile, local y sin IA",
   "type": "module",
   "scripts": {

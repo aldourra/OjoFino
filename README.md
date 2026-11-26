@@ -6,7 +6,8 @@ Entrega un informe en PDF con la página, la palabra y el motivo de cada error, 
 
 Estado: **versión 1.0** — las 6 fases del plan están completas. Funciona sin internet y se instala en el iPad.
 
-- Publicar: `docs/publicar.md`
+- Publicada en <https://aldourra.github.io/OjoFino/>
+- Publicar cambios: `docs/publicar.md`
 - Probar en el iPad: `docs/prueba-ipad.md`
 - LanguageTool en el Mac (opcional): `docs/languagetool-mac.md` Ver `CLAUDE.md` para el plan y las fases.
 
@@ -111,6 +112,11 @@ La página solo permite conexiones a `*.ts.net` y `localhost` (Content-Security-
 
 No se revisan (quedan para LanguageTool, fase 5): espacios dobles, dequeísmo, hay/ahí/ay,
 concordancia de género y frases que cruzan de una página a otra.
+
+## Licencia
+
+OjoFino se distribuye bajo la licencia MIT (ver `LICENSE`). Los componentes de terceros
+mantienen sus propias licencias:
 
 ## Licencias de terceros
 
