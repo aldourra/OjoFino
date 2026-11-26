@@ -4,12 +4,32 @@
  * Convierte el contenido de texto de pdf.js en una cadena con saltos de línea.
  */
 export function textContentToString(content) {
+  // Decide si hay espacio entre dos fragmentos según su distancia real en la
+  // página: muchos PDF parten palabras o separan la puntuación en fragmentos
+  // distintos, y agregar siempre un espacio crearía errores falsos.
   let out = '';
+  let prev = null;
+  let finDeLinea = true;
   for (const item of content.items) {
     if (!('str' in item)) continue;
+    if (item.str === '') {
+      if (item.hasEOL && !out.endsWith('\n')) { out += '\n'; finDeLinea = true; }
+      continue;
+    }
+    if (prev && !finDeLinea) {
+      const alto = item.height || prev.height || 10;
+      const mismaLinea = Math.abs(item.transform[5] - prev.transform[5]) < alto * 0.5;
+      if (!mismaLinea) {
+        out += '\n';
+      } else {
+        const hueco = item.transform[4] - (prev.transform[4] + prev.width);
+        if (hueco > alto * 0.15 && !out.endsWith(' ') && !item.str.startsWith(' ')) out += ' ';
+      }
+    }
     out += item.str;
-    if (item.hasEOL) out += '\n';
-    else if (item.str && !item.str.endsWith(' ')) out += ' ';
+    finDeLinea = !!item.hasEOL;
+    if (finDeLinea) out += '\n';
+    prev = item;
   }
   return out;
 }

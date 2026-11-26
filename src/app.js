@@ -37,12 +37,13 @@ function fila(h) {
     String(h.pagina),
     h.palabra,
     h.tipo,
+    h.motivo,
     null,
     h.sugerencias.length ? h.sugerencias.join(', ') : '—',
   ];
   celdas.forEach((c, i) => {
     const td = document.createElement('td');
-    if (i === 3) {
+    if (i === 4) {
       td.append(h.contexto.antes);
       const mark = document.createElement('mark');
       mark.textContent = h.contexto.palabra;

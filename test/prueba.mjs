@@ -13,10 +13,18 @@ const hallazgos = [];
 await extractPages(pdfjs, new Uint8Array(fs.readFileSync(archivo)), (n, texto) => {
   hallazgos.push(...checker.checkPage(texto, n));
 });
-for (const h of hallazgos) console.log(`p.${h.pagina}  ${h.palabra}  →  ${h.sugerencias.join(', ') || '—'}  | ${h.contexto.antes}[${h.contexto.palabra}]${h.contexto.despues}`);
+for (const h of hallazgos) console.log(`p.${h.pagina}  [${h.tipo}${h.regla ? ':' + h.regla : ''}]  ${h.palabra}  →  ${h.sugerencias.join(', ') || '—'}  | ${h.motivo}`);
 // iPad aparece porque no está en el diccionario: se resolverá con el diccionario personal (fase 4).
-const esperado = ['prueva', 'aplicacion', 'iPad', 'hiba'];
-const encontrados = hallazgos.map((h) => h.palabra);
-const ok = esperado.every((w) => encontrados.includes(w)) && encontrados.length === esperado.length;
-console.log(ok ? 'OK: se detectaron exactamente los errores esperados' : `FALLA: esperado ${esperado}, obtenido ${encontrados}`);
+const esperado = [
+  'p1 ortografía prueva', 'p1 ortografía aplicacion', 'p1 ortografía iPad',
+  'p2 ortografía hiba',
+  'p2 repetida', 'p2 contraccion', 'p2 interrogacion', 'p2 interrogativos', 'p2 haber',
+  'p2 mayuscula', 'p2 parentesis', 'p2 tildes-contexto', 'p2 concordancia',
+];
+const obtenido = hallazgos.map((h) => h.regla ? `p${h.pagina} ${h.regla}` : `p${h.pagina} ortografía ${h.palabra}`);
+const faltan = esperado.filter((e) => !obtenido.includes(e));
+const sobran = obtenido.filter((o) => !esperado.includes(o));
+const ok = faltan.length === 0 && sobran.length === 0;
+console.log(ok ? `OK: ${obtenido.length} hallazgos, exactamente los esperados`
+  : `FALLA\n  faltan: ${faltan.join(' | ') || '—'}\n  sobran: ${sobran.join(' | ') || '—'}`);
 process.exit(ok ? 0 : 1);

@@ -1,4 +1,6 @@
-// Núcleo de revisión ortográfica. Sin dependencias del navegador:
+import { revisarGramatica } from './grammar.js';
+
+// Núcleo de revisión ortográfica y gramatical. Sin dependencias del navegador:
 // se usa igual en el worker y en las pruebas con Node.
 
 // Palabra: letras Unicode, con apóstrofo o guion interno opcional.
@@ -18,7 +20,7 @@ export function normalizePageText(text) {
     .replace(/[ \t]*\n[ \t]*/g, '\n');
 }
 
-function contextAround(text, start, end) {
+export function contextAround(text, start, end) {
   const from = Math.max(0, start - CONTEXT_CHARS);
   const to = Math.min(text.length, end + CONTEXT_CHARS);
   const pre = (from > 0 ? '…' : '') + text.slice(from, start);
@@ -40,7 +42,8 @@ function maskSkipped(text) {
  * opciones.ignorarMayusculas: omite siglas en mayúsculas (OKE, ONT, TMF).
  */
 export function createChecker(speller, opciones = {}) {
-  const { ignorarMayusculas = true, maxSugerencias = 3 } = opciones;
+  const { ignorarMayusculas = true, maxSugerencias = 3, gramatica = true } = opciones;
+  const reglasDesactivadas = new Set(opciones.reglasDesactivadas || []);
   const cacheCorrect = new Map();
   const cacheSuggest = new Map();
 
@@ -62,11 +65,25 @@ export function createChecker(speller, opciones = {}) {
     return s;
   }
 
-  /** Revisa el texto de una página. Devuelve una lista de hallazgos. */
+  /** Revisa el texto de una página. Devuelve una lista de hallazgos ordenada por posición. */
   function checkPage(rawText, pagina) {
     const text = normalizePageText(rawText);
     const masked = maskSkipped(text);
     const hallazgos = [];
+    if (gramatica) {
+      for (const g of revisarGramatica(masked, reglasDesactivadas)) {
+        hallazgos.push({
+          pagina,
+          tipo: g.confianza === 'posible' ? 'gramática (posible)' : 'gramática',
+          regla: g.regla,
+          palabra: text.slice(g.start, g.end).replace(/\s+/g, ' '),
+          motivo: g.motivo,
+          sugerencias: g.sugerencia ? [g.sugerencia] : [],
+          contexto: contextAround(text, g.start, g.end),
+          _pos: g.start,
+        });
+      }
+    }
     for (const m of masked.matchAll(WORD_RE)) {
       const word = m[0];
       if (word.length < 2) continue;
@@ -80,8 +97,11 @@ export function createChecker(speller, opciones = {}) {
         motivo: 'Palabra no encontrada en el diccionario es_CL',
         sugerencias: suggest(word),
         contexto: ctx,
+        _pos: m.index,
       });
     }
+    hallazgos.sort((a, b) => a._pos - b._pos);
+    for (const h of hallazgos) delete h._pos;
     return hallazgos;
   }
 
