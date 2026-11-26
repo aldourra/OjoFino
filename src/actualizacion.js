@@ -6,17 +6,22 @@ export function iniciarModoSinConexion({ ocupado = () => false } = {}) {
 
   const aviso = document.getElementById('aviso-version');
   let recargando = false;
+  // Solo se recarga cuando el usuario pidió actualizar. En la primera visita el
+  // service worker también toma el control (clients.claim) y eso NO debe recargar
+  // la página: podría interrumpir una revisión recién empezada.
+  let pidioActualizar = false;
 
   function mostrarAviso(worker) {
     aviso.hidden = false;
     aviso.querySelector('button').onclick = () => {
       if (ocupado()) { aviso.querySelector('span').textContent = 'Termina la revisión en curso y vuelve a intentarlo.'; return; }
+      pidioActualizar = true;
       worker.postMessage('actualizar');
     };
   }
 
   navigator.serviceWorker.addEventListener('controllerchange', () => {
-    if (recargando) return;
+    if (recargando || !pidioActualizar) return;
     recargando = true;
     window.location.reload();
   });

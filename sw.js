@@ -1,6 +1,6 @@
 // Service worker de OjoFino: guarda la app para que funcione sin internet.
 // VERSION y ARCHIVOS los genera tools/generar-sw.mjs (no editar a mano).
-const VERSION = '2fa8378e3b7b';
+const VERSION = '678adee4caa2';
 const ARCHIVOS = [
   './',
   'dict/es_CL.aff',
